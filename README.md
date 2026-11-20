@@ -10,6 +10,7 @@ Project backend modern dan performa tinggi menggunakan runtime **Bun**, framewor
 - **Framework**: [ElysiaJS](https://elysiajs.com/)
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
 - **Database Driver**: [MySQL2](https://github.com/sidorares/node-mysql2)
+- **Security / Hashing**: Bcrypt (`Bun.password.hash`)
 - **Language**: TypeScript
 
 ---
@@ -21,8 +22,14 @@ belajar-vibe-coding/
 ├── src/
 │   ├── db/
 │   │   ├── index.ts        # Inisialisasi pool MySQL & client Drizzle ORM
-│   │   └── schema.ts       # Definisi schema database (MySQL)
+│   │   └── schema.ts       # Definisi schema database (tabel users)
+│   ├── routes/
+│   │   └── users-route.ts  # Routing ElysiaJS (validasi request & response)
+│   ├── services/
+│   │   └── users-service.ts# Logika bisnis aplikasi (cek duplikasi, hash bcrypt, DB)
 │   └── index.ts            # Entry point server ElysiaJS
+├── tests/
+│   └── users.test.ts       # Automated unit & integration test
 ├── drizzle.config.ts       # Konfigurasi Drizzle Kit untuk migrasi/push
 ├── .env.example            # Contoh konfigurasi environment variable
 ├── .env                    # Konfigurasi environment lokal (diabaikan git)
@@ -76,38 +83,51 @@ Server akan aktif di: `http://localhost:3000`
 
 ---
 
-## 📡 Endpoint API Dasar
+## 📡 Endpoint API
 
-- **`GET /`**: Mengecek apakah server ElysiaJS aktif.
+### 1. Status Server
+- **`GET /`**: Mengecek status server.
+- **`GET /health`**: Health check koneksi aktif ke database MySQL.
+
+### 2. Registrasi Pengguna Baru
+- **`POST /api/users`**
+- **Header**: `Content-Type: application/json`
+- **Request Body**:
   ```json
   {
-    "status": "ok",
-    "message": "Server ElysiaJS + Bun berjalan dengan baik!",
-    "timestamp": "2026-11-19T..."
+    "name": "Eko",
+    "email": "eko@localhost",
+    "password": "rahasia"
   }
   ```
+- **Response Success (HTTP 200)**:
+  ```json
+  {
+    "data": "OK"
+  }
+  ```
+- **Response Error Duplicate (HTTP 400)**:
+  ```json
+  {
+    "error": "Email sudah terdaftar"
+  }
+  ```
+- **Response Validation Error (HTTP 422)**:
+  Jika salah satu field tidak lengkap / kosong.
 
-- **`GET /health`**: Health check yang memverifikasi koneksi aktif ke database MySQL.
-  - Jika MySQL terhubung (HTTP 200):
-    ```json
-    {
-      "status": "healthy",
-      "server": "running",
-      "database": "connected",
-      "message": "Server dan koneksi MySQL berjalan dengan sehat",
-      "timestamp": "2026-11-19T..."
-    }
-    ```
-  - Jika MySQL belum aktif/terhubung (HTTP 503):
-    ```json
-    {
-      "status": "degraded",
-      "server": "running",
-      "database": "disconnected",
-      "message": "Database MySQL belum terhubung atau server database belum aktif",
-      "timestamp": "2026-11-19T..."
-    }
-    ```
+---
+
+## 🧪 Testing & Type Checking
+
+- **Jalankan Automated Tests:**
+  ```bash
+  bun test
+  ```
+
+- **Type Check TypeScript:**
+  ```bash
+  bun run typecheck
+  ```
 
 ---
 
